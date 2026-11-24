@@ -78,7 +78,7 @@ class Home(QMainWindow):
         #############################################################
 
         self.wid3 = QWidget()
-        self.lay3 = QVBoxLayout()
+        self.lay3 = QHBoxLayout()
 
         self.wid3.setLayout(self.lay3)
 
@@ -87,10 +87,17 @@ class Home(QMainWindow):
         #############################################################
 
         self.task_name_error = QLabel()
+        self.close_error_button = QPushButton("✕")
 
+        self.close_error_button.setObjectName("close_error_button")
         self.task_name_error.setObjectName("task_name_error")
 
         self.lay3.addWidget(self.task_name_error)
+        self.lay3.addWidget(self.close_error_button)
+        self.lay3.addStretch()
+
+        self.task_name_error.setHidden(True)
+        self.close_error_button.setHidden(True)
 
         #############################################################
 
@@ -99,14 +106,19 @@ class Home(QMainWindow):
 
         self.wid4.setLayout(self.lay4)
 
-        self.scroll_area = QScrollArea()
-        self.scroll_area.setWidgetResizable(True)
-        self.lay4.addStretch()
-        self.scroll_area.setWidget(self.wid4)
+        #############################################################
 
+        self.scroll_area = QScrollArea()
+        
+        self.scroll_area.setObjectName("scroll_area")
+        
         self.main_lay.addWidget(self.scroll_area)
 
-        self.scroll_area.setObjectName("scroll_area")
+        self.lay4.addStretch()
+
+        self.scroll_area.setWidget(self.wid4)
+        self.scroll_area.setWidgetResizable(True)
+        
 
     def task_count_update(self):
         self.task_count.setText(f"Number of tasks to do: {len(self.tasks_remaining)}")
@@ -123,26 +135,31 @@ class Home(QMainWindow):
         print(self.tasks_remaining)
         
     def funcs(self):
-        self.add_button.clicked.connect(self.add)
+        self.add_button.clicked.connect(self.add_click)
         self.theme_toggle.clicked.connect(self.theme_changer)
+        self.close_error_button.clicked.connect(lambda potato: (self.task_name_error.setHidden(True), self.close_error_button.setHidden(True)))
+
+        self.add_button.setMaximumWidth(100)
+        self.close_error_button.setMaximumSize(20, 20)
 
         self.input_field.setPlaceholderText("Enter a task name")
+        self.input_field.setMaxLength(50)
+        self.input_field.setMaximumWidth(500)
 
         self.enter = QShortcut(QKeySequence("Return"), self)
-        self.enter.activated.connect(self.add)
+        self.enter.activated.connect(self.add_click)
 
-    def add(self):
+    def add_click(self):
         task_name = self.input_field.text().lstrip().rstrip()
 
         if task_name == "":
-            self.task_name_error.setText("Enter a name!")
-
-        elif len(task_name) > 50:
-            self.task_name_error.setText("Too long!")
+            self.task_name_error.setHidden(False)
+            self.close_error_button.setHidden(False)
+            self.task_name_error.setText("Enter task name!")
 
         elif task_name in self.tasks:
             reply = QMessageBox.warning(
-                None,
+                self,
                 "Confirmation",
                 "This task already exists!\n"
                 "Do you still want to create it?",
@@ -151,41 +168,33 @@ class Home(QMainWindow):
             )
 
             if reply == QMessageBox.Yes:
-                task = Tasks(name=task_name, mainwinodow=self)
-                
-                self.lay4.insertWidget(0, task)
-                
-                self.tasks.append(task_name)
-                self.tasks_remaining.append(task_name)
-                self.tasks_widgets.append(task)
-
-                self.input_field.clear()
-                self.task_name_error.clear()
-                
-                self.task_count_update()
-                
-                print(self.tasks)
-                print(len(self.tasks))
+                self.add_task(task_name=task_name)
 
             else:
                 pass
 
         else:
-            task = Tasks(name=task_name, mainwinodow=self)
+            self.add_task(task_name=task_name)
 
-            self.lay4.insertWidget(0, task)
+    def add_task(self, task_name):
+        task = Tasks(name=task_name, mainwinodow=self)
+                        
+        self.lay4.insertWidget(0, task)
+        
+        self.tasks.append(task_name)
+        self.tasks_remaining.append(task_name)
+        self.tasks_widgets.append(task)
 
-            self.tasks.append(task_name)
-            self.tasks_remaining.append(task_name)
-            self.tasks_widgets.append(task)
+        self.task_name_error.setHidden(True)
+        self.close_error_button.setHidden(True)
 
-            self.input_field.clear()
-            self.task_name_error.clear()
-
-            self.task_count_update()
-
-            print(self.tasks)
-            print(len(self.tasks))
+        self.input_field.clear()
+        self.task_name_error.clear()
+        
+        self.task_count_update()
+        
+        print(self.tasks)
+        print(len(self.tasks))
 
     def remove_task(self, name, widget):
         print("Before: ", self.tasks)
@@ -264,6 +273,22 @@ class Tasks(QWidget):
 
         self.task_wid.setLayout(self.task_lay)
 
+        ############################################################
+
+        self.error_label = QLabel()
+
+        ###########################################################
+
+        self.error_label.setStyleSheet("""
+            color: red;
+            font-weight: bold;
+            font-size: 12px;
+        """)
+
+        ############################################################
+
+        self.main_lay.addWidget(self.error_label)
+
         #############################################################
 
         self.label = QLabel(self.name)
@@ -279,6 +304,7 @@ class Tasks(QWidget):
 
         self.task_lay.addWidget(self.label)
         self.task_lay.addWidget(self.edit_name)
+        self.task_lay.addStretch()
         self.task_lay.addWidget(self.edit_button)
         self.task_lay.addWidget(self.save_button)
         self.task_lay.addWidget(self.done)
@@ -288,19 +314,24 @@ class Tasks(QWidget):
         #############################################################
 
         self.label.setFixedHeight(30)
+        self.edit_name.setMaxLength(50)
+        self.edit_name.setMaximumWidth(500)
         self.edit_button.setFixedWidth(100)
+        self.save_button.setFixedWidth(100)
         self.done.setFixedWidth(100)
         self.undone.setFixedWidth(100)
         self.delete_button.setFixedWidth(100)
 
         #############################################################
 
+        self.error_label.setHidden(True)
         self.edit_name.setHidden(True)
         self.save_button.setHidden(True)
         self.undone.setHidden(True)
 
         #############################################################
 
+        self.edit_name.editingFinished.connect(self.save_click)
         self.edit_button.clicked.connect(self.edit_click)
         self.save_button.clicked.connect(self.save_click)
         self.delete_button.clicked.connect(self.delete_click)
@@ -355,17 +386,47 @@ class Tasks(QWidget):
         self.edit_button.setHidden(True)
         self.save_button.setHidden(False)
 
-    def save_click(self): #working here
+    def save_click(self):
+        given_name = self.edit_name.text().lstrip().rstrip()
+        
+        if given_name == "":
+            self.error_label.setHidden(False)
+            self.error_label.setText("Enter task name!")
+
+        elif given_name in self.mainwindow.tasks:
+            if given_name == self.name:
+                self.save_edited_name()
+            else:
+                reply = QMessageBox.warning(
+                    self.mainwindow,
+                    "Confirmation",
+                    "This task already exists!\n"
+                    "Do you still want to create it?",
+                    QMessageBox.No,
+                    QMessageBox.Yes
+                )
+
+                if reply == QMessageBox.Yes:
+                    self.save_edited_name()
+            
+                else:
+                    pass
+
+        else:
+            self.save_edited_name()
+
+    def save_edited_name(self):
         self.old_name = self.name
         self.name = self.edit_name.text().lstrip().rstrip()
-
+    
         self.label.setText(self.name)
-        self.label.setHidden(False)
-        
-        self.edit_name.setHidden(True)
-        self.done.setHidden(False)
 
+        self.error_label.setHidden(True)
+        self.label.setHidden(False)
+        self.done.setHidden(False)
         self.edit_button.setHidden(False)
+
+        self.edit_name.setHidden(True)
         self.save_button.setHidden(True)
 
         self.mainwindow.change_task_name(old_name=self.old_name, new_name=self.name, task=self)
@@ -390,7 +451,8 @@ class Tasks(QWidget):
                 color: #252B36;
                 font-family: Calibri;
                 font-weight: bold;
-                font-size: 15px;
+                font-size: 18px;
+                padding: 5px 10px;
             """)
 
             self.edit_button.setStyleSheet("""

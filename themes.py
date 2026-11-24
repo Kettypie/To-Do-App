@@ -25,6 +25,19 @@ QLabel#task_name_error {
     font-weight: bold;
 }
 
+QPushButton#close_error_button {
+    background: transparent;
+    border: 1px solid red;
+    color: red;
+    font-weight:bold;
+    font-size: 15px;
+    padding: none;
+}
+
+QPushButton#close_error_button:hover {
+    color: darkred;
+}
+
 QPushButton {
     background-color: #292D36;
     color: #FFFFFF;
@@ -91,6 +104,19 @@ QLabel#title_label {
 QLabel#task_name_error {
     color: red;
     font-weight: bold;
+}
+
+QPushButton#close_error_button {
+    background: transparent;
+    border: 1px solid red;
+    color: red;
+    font-weight:bold;
+    font-size: 15px;
+    padding: none;
+}
+
+QPushButton#close_error_button:hover {
+    color: darkred;
 }
 
 QPushButton {
